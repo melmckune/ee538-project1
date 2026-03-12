@@ -26,23 +26,78 @@ std::vector<std::vector<int>> edge_list;
 
 void build_adj_matrix()
 {
-    
+    // (1) allocate matrix adj of appropriate size
+    int num_voters = opinions.size();
+    cout << "Number of voters: " << num_voters << endl;
+
+    adj.resize(num_voters, std::vector<int>(num_voters));
+
+    // (2) run through edge list and populate adj
+    for (int i = 0; i < edge_list.size(); i++) {
+        vector<int> edge = edge_list[i];
+        int j = edge[0];
+        int k = edge[1];
+        adj[j][k] = 1;
+    }
 }
 
 double calculate_fraction_of_ones()
 {
-   
+   // (3) Calculate the fraction of nodes with opinion 1 and return it.
+   double num_one = 0.0;
+
+   for (int i = 0; i < opinions.size(); i++) {
+        if (opinions[i] == 1) {
+            num_one += 1;
+        }
+   }
+   return num_one / total_nodes;
 }
 
 // For a given node, count majority opinion among its neighbours. Tie -> 0.
 int get_majority_friend_opinions(int node)
 {
+    // (4) Count the number of neighbours with opinion 0 and opinion 1. Return the majority (0 or 1). 
+    //If tie, return 0.
+
+    vector<int> curr_node = adj[node];
+
+    int num_zero = 0;
+    int num_one = 0;
+
+    for (int i = 0; i < curr_node.size(); i++) {
+        if (curr_node[i] == 0) {
+            num_zero += 1;
+        } else {
+            num_one += 1;
+        }
+    }
+
+    if (num_zero < num_one) {
+        return 1;
+    } else {
+        return 0;
+    }
 
 }
 
 // Calculate new opinions for all voters and return if anyone's opinion changed
 bool update_opinions()
 {
+    // (5) For each node, calculate the majority opinion among its neighbours and update the node's opinion.
+    // Return true if any node's opinion changed, false otherwise.
+    bool updated = false;
+
+    for (int i = 0; i < opinions.size(); i++) {
+        int majority = get_majority_friend_opinions(i);
+        bool update = majority != opinions[i];
+        if (update) {
+            opinions[i] = majority;
+            updated = true;
+        }
+    }
+
+    return updated;
 
 }
 
@@ -69,6 +124,11 @@ int main() {
     
     /// (6)  //////////////////////////////////////////////
     
+    double fraction_ones = calculate_fraction_of_ones();
+    while (iteration < max_iterations && opinions_changed) {
+        opinions_changed = update_opinions();
+        iteration += 1;
+    }
 
     ////////////////////////////////////////////////////////
     // Print final result
